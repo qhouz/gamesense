@@ -14,6 +14,9 @@ local hitchance = {}; do
     -- @private
     local list = {};
     local master = ui.new_checkbox("Rage", "Aimbot", "Override hit chance");
+
+    local on_hotkey = ui.new_slider("Rage", "Aimbot", "On hotkey hit chance", 0, 100, 50, true, "%", 1, {[0] = "Off"});
+    local hotkey = ui.new_hotkey("Rage", "Aimbot", "\n hotkey-hitchance", true);
     local in_air = ui.new_slider("Rage", "Aimbot", "In-air hit chance", 0, 100, 50, true, "%", 1, {[0] = "Off"});
     local no_scope = ui.new_slider("Rage", "Aimbot", "Noscope hit chance", 0, 100, 50, true, "%", 1, {[0] = "Off"});
 
@@ -28,6 +31,8 @@ local hitchance = {}; do
         local val = ui.get(item);
         local wpn = ui.get(skeet.weapon_type);
 
+        ui.set_visible(on_hotkey, val);
+        ui.set_visible(hotkey, val);
         ui.set_visible(in_air, val);
         ui.set_visible(no_scope, val and can_scope[wpn]);
     end
@@ -66,6 +71,15 @@ local hitchance = {}; do
         local m_fFlags = entity.get_prop(me, "m_fFlags");
 
         if ui.get(master) then
+            if ui.get(hotkey) then
+                local value = ui.get(on_hotkey);
+
+                if value ~= 0 then
+                    self:set(wpn, value);
+                    return;
+                end
+            end
+
             if bit.band(m_fFlags, FL_ONGROUND) == 0 then
                 local value = ui.get(in_air);
 
