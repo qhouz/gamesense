@@ -13,7 +13,9 @@ end
 local hitchance = {}; do
     -- @private
     local list = {};
+
     local master = ui.new_checkbox("Rage", "Aimbot", "Override hit chance");
+    local on_hotkey_indicator = ui.new_checkbox("Rage", "Other", "Hotkey hit chance indicator");
 
     local on_hotkey = ui.new_slider("Rage", "Aimbot", "On hotkey hit chance", 0, 100, 50, true, "%", 1, {[0] = "Off"});
     local hotkey = ui.new_hotkey("Rage", "Aimbot", "\n hotkey-hitchance", true);
@@ -27,10 +29,11 @@ local hitchance = {}; do
         ["Rifles"] = true
     };
 
-    local function callback(item)
-        local val = ui.get(item);
+    local function callback()
+        local val = ui.get(master);
         local wpn = ui.get(skeet.weapon_type);
 
+        ui.set_visible(on_hotkey_indicator, val);
         ui.set_visible(on_hotkey, val);
         ui.set_visible(hotkey, val);
         ui.set_visible(in_air, val);
@@ -38,7 +41,9 @@ local hitchance = {}; do
     end
 
     ui.set_callback(master, callback);
-    callback(master);
+    ui.set_callback(hotkey, callback);
+
+    callback();
 
     -- @public
     function hitchance:on_shutdown()
@@ -47,6 +52,8 @@ local hitchance = {}; do
         for k, v in pairs(list) do
             ui.set(skeet.weapon_type, k);
             ui.set(skeet.hitchance, v);
+
+            list[k] = nil;
         end
 
         ui.set(skeet.weapon_type, prev);
@@ -70,12 +77,17 @@ local hitchance = {}; do
         local wpn = ui.get(skeet.weapon_type);
         local m_fFlags = entity.get_prop(me, "m_fFlags");
 
-        if ui.get(master) then
+        if not ui.is_menu_open() and ui.get(master) then
             if ui.get(hotkey) then
                 local value = ui.get(on_hotkey);
 
                 if value ~= 0 then
                     self:set(wpn, value);
+
+                    if ui.get(on_hotkey_indicator) then
+                        renderer.indicator(255, 255, 255, 200, "HC");
+                    end
+
                     return;
                 end
             end
@@ -108,6 +120,10 @@ end
 
 -- @event
 client.set_event_callback("shutdown", function()
+    hitchance:on_shutdown();
+end);
+
+client.set_event_callback("pre_config_save", function()
     hitchance:on_shutdown();
 end);
 
